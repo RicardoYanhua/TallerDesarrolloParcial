@@ -1,0 +1,33 @@
+PORT = 3309
+USER = root
+PASSWORD = Unu#2025
+
+
+
+
+-- Crear la base de datos
+CREATE DATABASE IF NOT EXISTS db_operacion;
+USE db_operacion;
+
+-- Crear la tabla 'operacion'
+-- (Si la tabla no existe, será creada con las columnas necesarias)
+CREATE TABLE IF NOT EXISTS operacion (
+    id_operacion VARCHAR(36) NOT NULL PRIMARY KEY,
+    id_cliente INT,
+    tipo_operacion VARCHAR(50),
+    total DOUBLE
+);
+
+-- Insertar 10 registros de ejemplo
+-- (Se generan IDs únicos con UUID() y se agregan distintos valores para pruebas)
+INSERT INTO operacion (id_operacion, id_cliente, tipo_operacion, total) VALUES
+(UUID(), 1, 'COMPRA', 150.50),
+(UUID(), 2, 'VENTA', 200.00),
+(UUID(), 3, 'COMPRA', 320.75),
+(UUID(), 4, 'VENTA', 50.25),
+(UUID(), 5, 'COMPRA', 400.00),
+(UUID(), 6, 'VENTA', 75.60),
+(UUID(), 7, 'COMPRA', 90.10),
+(UUID(), 8, 'VENTA', 120.40),
+(UUID(), 9, 'COMPRA', 250.00),
+(UUID(), 10, 'VENTA', 180.90);

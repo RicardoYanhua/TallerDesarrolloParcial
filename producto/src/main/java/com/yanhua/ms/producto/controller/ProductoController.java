@@ -10,12 +10,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.yanhua.ms.producto.constans.ApiRoutes;
+import com.yanhua.ms.producto.dto.ProductoRequestCreate;
 import com.yanhua.ms.producto.dto.ProductoRequestUpdate;
 import com.yanhua.ms.producto.model.ProductoModel;
 import com.yanhua.ms.producto.service.IProductoService;
@@ -24,7 +27,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RestController
 @RequestMapping(ApiRoutes.Producto.BASE)
-@Tag(name = "Productos", description = "Endpoints para la gestión y consulta de productos del sistema")
+@Tag(name = "Productos", description = "Endpoints para la gestión y consulta de productos del sistema.")
 public class ProductoController {
 
     @Autowired
@@ -36,13 +39,12 @@ public class ProductoController {
      * LISTAR - Devuelve todas las facturas.
      */
     @GetMapping(ApiRoutes.Producto.LISTAR)
-    public List<ProductoModel> get() {
+    public List<ProductoModel> getAll() {
         logger.info("[ProductoController][GET][LIST] → Solicitando listado completo de productos");
         List<ProductoModel> productos = productoService.findAll();
         logger.info("[ProductoController][GET][LIST][SUCCESS] → Total de productos encontrados: {}", productos.size());
         return productos;
     }
-
 
     /**
      * UPDATE - Actualiza una factura existente.
@@ -61,13 +63,30 @@ public class ProductoController {
         return ResponseEntity.ok(updatedProducto);
     }
 
-    @GetMapping(ApiRoutes.Producto.ID_PRODUCTO)
-    public ResponseEntity<ProductoModel> getById(@PathVariable Long idProducto) {
-        ProductoModel producto = productoService.findById(idProducto);
-        if (producto == null) {
+    /**
+     * CREATE - Crea un nuevo producto.
+     */
+    @PostMapping(ApiRoutes.Producto.CREAR)
+    public ResponseEntity<ProductoModel> create(@RequestBody ProductoRequestCreate productoRequest) {
+        logger.info("[ProductoController][POST][CREATE] → Creando producto nombre={}", productoRequest.getNombre());
+        ProductoModel created = productoService.create(productoRequest);
+        logger.info("[ProductoController][POST][CREATE][SUCCESS] → Producto creado idProducto={}", created.getIdProducto());
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
+    }
+
+    /**
+     * DELETE - Elimina un producto por id.
+     */
+    @DeleteMapping(ApiRoutes.Producto.DELETE)
+    public ResponseEntity<Void> delete(@PathVariable Long idProducto) {
+        logger.info("[ProductoController][DELETE] → Eliminando producto idProducto={}", idProducto);
+        boolean removed = productoService.delete(idProducto);
+        if (!removed) {
+            logger.warn("[ProductoController][DELETE][NOT_FOUND] → No existe producto idProducto={}", idProducto);
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        return ResponseEntity.ok(producto);
+        logger.info("[ProductoController][DELETE][SUCCESS] → Producto eliminado idProducto={}", idProducto);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 

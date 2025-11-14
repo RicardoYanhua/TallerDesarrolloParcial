@@ -1,204 +1,233 @@
-package com.yanhua.ms.Operacion.exception;
+package com.yanhua.ms.operacion.exception;
+
+import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 
-import java.time.LocalDateTime;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    /**
-     * Maneja errores cuando el JSON recibido no puede ser parseado.
-     */
+        /**
+         * Maneja JSON inválido en el body (malformed JSON) -> 400 Bad Request.
+         *
+         * Cuándo se ejecuta:
+         * - Cuando Spring no puede leer/convertir el body de la petición al objeto Java esperado
+         *   (por ejemplo JSON mal formado, tipos incompatibles o errores de parseo).
+         * - Ocurre en la fase de deserialización/binding, antes de invocar el controlador.
+         *
+         * Qué registra y devuelve:
+         * - Registra un `ERROR` con el mensaje de la excepción y, si procede, la causa más específica.
+         * - Devuelve un `ErrorResponse` (construido vía constructor) que incluye: `timestamp`, `status` = 400,
+         *   `error` con texto en español, `message` con el detalle de la causa y `path` con la descripción
+         *   de la petición (`request.getDescription(false)`).
+         * - Código HTTP: 400 Bad Request.
+         */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleInvalidJson(HttpMessageNotReadableException ex, WebRequest request) {
-        logger.error("[JSON_PARSING_ERROR] → JSON mal formado en request: {} | Causa: {}", 
-                request.getDescription(false), ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage());
-        logger.debug("[STACK_TRACE]", ex);
+
+        String description = request.getDescription(false);
+        logger.error("[Request] → JSON mal formado: {}", ex.getMessage());
 
         ErrorResponse error = new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.BAD_REQUEST.value(),
                 "Solicitud mal formada (JSON inválido)",
                 ex.getMostSpecificCause() != null ? ex.getMostSpecificCause().getMessage() : ex.getMessage(),
-                request.getDescription(false));
-        
-        logger.info("[RESPONSE] → Retornando error 400 Bad Request por JSON inválido");
+                description);
+
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * Maneja errores de validación de campos (Bean Validation).
-     */
+        /**
+         * Maneja errores de validación de argumentos (@Valid) -> 400 Bad Request.
+         *
+         * Cuándo se ejecuta:
+         * - Tras el binding de la petición cuando las anotaciones de validación en el DTO
+         *   (por ejemplo `@NotNull`, `@Size`, `@Positive`) no se cumplen.
+         * - Normalmente ocurre en controladores con `@Valid @RequestBody`.
+         *
+         * Qué registra y devuelve:
+         * - Registra un `WARN` con la lista de campos inválidos y sus mensajes.
+         * - Devuelve un `ErrorResponse` (vía builder) con `timestamp`, `status` = 400,
+         *   `error` = "Solicitud inválida" y `message` con la concatenación de errores
+         *   en formato `campo: mensaje; campo2: mensaje2`.
+         * - Código HTTP: 400 Bad Request.
+         *
+         * Ejemplo de `message` devuelto: "Validación fallida: idCliente: no debe ser nulo; total: debe ser positivo"
+         */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex,
             WebRequest request) {
-        String details = ex.getBindingResult().getFieldErrors().stream()
-                .map(err -> err.getField() + ": " + err.getDefaultMessage())
-                .reduce((a, b) -> a + "; " + b)
-                .orElse("Datos inválidos");
-        
-        logger.warn("[VALIDATION_ERROR] → Error de validación en request: {} | Detalles: {}", 
-                request.getDescription(false), details);
-        logger.debug("[VALIDATION_FIELDS] → {}", ex.getBindingResult().getFieldErrors());
 
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Error de validación de campos",
-                details,
-                request.getDescription(false));
-        
-        logger.info("[RESPONSE] → Retornando error 400 Bad Request por validación fallida");
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        String path = ((ServletWebRequest) request).getRequest().getRequestURI();
+        String errors = ex.getBindingResult().getFieldErrors().stream()
+                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+
+        logger.warn("Validación fallida para la petición {}: {}", path, errors);
+
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Solicitud inválida")
+                .message("Validación fallida: " + errors)
+                .path(path)
+                .build();
+
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * Maneja errores por parámetros de ruta o query con tipo incorrecto.
-     */
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    @SuppressWarnings("null")
-    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
-            WebRequest request) {
-        Class<?> requiredTypeClass = ex.getRequiredType();
-        String requiredType = (requiredTypeClass != null) ? requiredTypeClass.getSimpleName() : "Unknown";
-        
-        logger.warn("[TYPE_MISMATCH_ERROR] → Tipo de parámetro incorrecto en request: {} | Parámetro: '{}' | Tipo esperado: {}", 
-                request.getDescription(false), ex.getName(), requiredType);
-        logger.debug("[TYPE_MISMATCH_VALUE] → Valor recibido: {}", ex.getValue());
+        /**
+         * Maneja violaciones de restricciones de la capa de validación
+         * (ConstraintViolationException) -> 400 Bad Request.
+         *
+         * Cuándo se ejecuta:
+         * - Al fallar validaciones declaradas con Bean Validation (p.ej. en parámetros
+         *   de métodos validados con `@Validated`) o en validaciones programáticas que
+         *   lanzan `ConstraintViolationException`.
+         *
+         * Qué registra y devuelve:
+         * - Registra un `WARN` con cada violación (propiedad: mensaje).
+         * - Devuelve un `ErrorResponse` con `status = 400`, `error = "Solicitud inválida"`
+         *   y `message` con la lista de violaciones.
+         */
+    @ExceptionHandler(ConstraintViolationException.class)
+    protected ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex,
+            HttpServletRequest request) {
 
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Parámetro con tipo incorrecto",
-                "El parámetro '" + ex.getName() + "' debe ser del tipo " + requiredType,
-                request.getDescription(false));
-        
-        logger.info("[RESPONSE] → Retornando error 400 Bad Request por tipo de parámetro incorrecto");
-        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+        String path = request.getRequestURI();
+        String msg = ex.getConstraintViolations().stream()
+                .map(cv -> cv.getPropertyPath() + ": " + cv.getMessage())
+                .collect(Collectors.joining("; "));
+
+        logger.warn("Violaciones de restricciones en {}: {}", path, msg);
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Solicitud inválida")
+                .message("Violaciones de restricciones: " + msg)
+                .path(path)
+                .build();
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * Maneja excepciones de recursos no encontrados.
-     */
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFound(ResourceNotFoundException ex, WebRequest request) {
-        logger.warn("[RESOURCE_NOT_FOUND] → Recurso no encontrado en request: {} | Mensaje: {}", 
-                request.getDescription(false), ex.getMessage());
-        logger.debug("[NOT_FOUND_DETAILS] → {}", ex);
-
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                "Recurso no encontrado",
-                ex.getMessage(),
-                request.getDescription(false));
-        
-        logger.info("[RESPONSE] → Retornando error 404 Not Found");
-        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
-    }
-
-    /**
-     * Maneja violaciones de integridad de datos (clave única, null, foreign key,
-     * etc.).
-     */
+        /**
+         * Maneja violaciones de integridad de la base de datos (p.ej. unique constraint) -> 409 Conflict.
+         *
+         * Cuándo se ejecuta:
+         * - Cuando la base de datos rechaza una operación por violar restricciones (únicas,
+         *   claves foráneas, not-null, etc.) y Spring lanza `DataIntegrityViolationException`.
+         *
+         * Qué registra y devuelve:
+         * - Registra un `ERROR` incluyendo la excepción para diagnóstico (stacktrace).
+         * - Devuelve un `ErrorResponse` con `status = 409` (Conflicto) y un mensaje que
+         *   incluye la causa más específica proporcionada por el driver/BD.
+         */
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex, WebRequest request) {
-        String detailedMessage = ex.getMostSpecificCause() != null ? 
-                ex.getMostSpecificCause().getMessage() : ex.getMessage();
-        
-        logger.error("[DATA_INTEGRITY_VIOLATION] → Violación de integridad de datos en request: {} | Causa: {}", 
-                request.getDescription(false), detailedMessage);
-        logger.error("[DATA_INTEGRITY_ROOT_CAUSE] → {}", ex);
-        logger.debug("[STACK_TRACE]", ex);
+    protected ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex,
+            HttpServletRequest request) {
 
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                "Violación de integridad de datos",
-                detailedMessage,
-                request.getDescription(false));
-        
-        logger.info("[RESPONSE] → Retornando error 409 Conflict por violación de integridad");
-        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+        String path = request.getRequestURI();
+        logger.error("Violación de integridad de datos en {}: {}", path, ex.getMessage(), ex);
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error("Conflicto")
+                .message("Violación de integridad en la base de datos: " + ex.getMostSpecificCause().getMessage())
+                .path(path)
+                .build();
+        return new ResponseEntity<>(body, HttpStatus.CONFLICT);
     }
 
-    /**
-     * Maneja errores de acceso a la base de datos.
-     */
+        /**
+         * Maneja errores de acceso a datos en general (DataAccessException) -> 500 Internal Server Error.
+         *
+         * Cuándo se ejecuta:
+         * - Para errores de la capa de persistencia como fallos de conexión, timeouts JDBC,
+         *   problemas de recursos o excepciones que se traducen a `DataAccessException`.
+         *
+         * Qué registra y devuelve:
+         * - Registra un `ERROR` con el stacktrace para facilitar la depuración.
+         * - Devuelve un `ErrorResponse` genérico con `status = 500` para no exponer detalles internos.
+         */
     @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<ErrorResponse> handleDatabaseError(DataAccessException ex, WebRequest request) {
-        String detailedMessage = ex.getMostSpecificCause() != null ? 
-                ex.getMostSpecificCause().getMessage() : ex.getMessage();
-        
-        logger.error("[DATABASE_ACCESS_ERROR] → Error de acceso a base de datos en request: {} | Causa: {}", 
-                request.getDescription(false), detailedMessage);
-        logger.error("[DATABASE_ERROR_ROOT_CAUSE] → {}", ex);
-        logger.debug("[STACK_TRACE]", ex);
-
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Error al acceder a la base de datos",
-                detailedMessage,
-                request.getDescription(false));
-        
-        logger.info("[RESPONSE] → Retornando error 500 Internal Server Error por error de base de datos");
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    protected ResponseEntity<ErrorResponse> handleDataAccess(DataAccessException ex, HttpServletRequest request) {
+        String path = request.getRequestURI();
+        logger.error("Error de acceso a datos en {}: {}", path, ex.getMessage(), ex);
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error("Error de datos")
+                .message("Error de acceso a datos")
+                .path(path)
+                .build();
+        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    /**
-     * Maneja transacciones duplicadas.
-     */
-    @ExceptionHandler(DuplicateKeyException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateException(DuplicateKeyException ex, WebRequest request) {
-        logger.warn("[DUPLICATE_KEY_ERROR] → Transacción duplicada detectada en request: {} | Causa: {}", 
-                request.getDescription(false), ex.getMessage());
-        logger.debug("[DUPLICATE_DETAILS] → {}", ex);
-
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.CONFLICT.value(),
-                "Transacción duplicada",
-                ex.getMessage(),
-                request.getDescription(false));
-        
-        logger.info("[RESPONSE] → Retornando error 409 Conflict por transacción duplicada");
-        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+        /**
+         * Maneja `IllegalArgumentException` lanzada por la aplicación -> 400 Bad Request.
+         *
+         * Cuándo se ejecuta:
+         * - Cuando la lógica interna detecta argumentos inválidos y lanza `IllegalArgumentException`.
+         *
+         * Qué registra y devuelve:
+         * - Registra un `WARN` con el mensaje de la excepción.
+         * - Devuelve un `ErrorResponse` con `status = 400` y el mensaje de la excepción.
+         */
+    @ExceptionHandler(IllegalArgumentException.class)
+    protected ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex,
+            HttpServletRequest request) {
+        String path = request.getRequestURI();
+        logger.warn("Argumento inválido en {}: {}", path, ex.getMessage());
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Solicitud inválida")
+                .message(ex.getMessage())
+                .path(path)
+                .build();
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
-    /**
-     * Maneja cualquier otra excepción no controlada.
-     */
+        /**
+         * Manejador por defecto para excepciones no esperadas -> 500 Internal Server Error.
+         *
+         * Cuándo se ejecuta:
+         * - Captura cualquier excepción no manejada por handlers más específicos.
+         *
+         * Qué registra y devuelve:
+         * - Registra un `ERROR` con el stacktrace completo para diagnóstico.
+         * - Devuelve un `ErrorResponse` con `status = 500` y un mensaje genérico para el cliente.
+         */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
-        logger.error("[UNCAUGHT_EXCEPTION] → Error no controlado en request: {} | Tipo: {} | Mensaje: {}", 
-                request.getDescription(false), ex.getClass().getName(), ex.getMessage());
-        logger.error("[UNCAUGHT_EXCEPTION_ROOT_CAUSE] → {}", ex);
-        logger.debug("[STACK_TRACE]", ex);
-
-        ErrorResponse error = new ErrorResponse(
-                LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Error interno del servidor",
-                ex.getMessage(),
-                request.getDescription(false));
-        
-        logger.info("[RESPONSE] → Retornando error 500 Internal Server Error por excepción no controlada");
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    protected ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest request) {
+        String path = request.getRequestURI();
+        logger.error("Excepción no controlada en {}: {}", path, ex.getMessage());
+        ErrorResponse body = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error("Error interno del servidor")
+                .message("Ocurrió un error inesperado")
+                .path(path)
+                .build();
+        return new ResponseEntity<>(body, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
 }

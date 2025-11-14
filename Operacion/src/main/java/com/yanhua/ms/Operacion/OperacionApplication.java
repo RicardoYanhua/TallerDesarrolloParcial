@@ -1,4 +1,4 @@
-package com.yanhua.ms.Operacion;
+package com.yanhua.ms.operacion;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

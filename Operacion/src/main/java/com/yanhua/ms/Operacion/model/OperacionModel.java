@@ -1,18 +1,22 @@
-package com.yanhua.ms.Operacion.model;
- 
+package com.yanhua.ms.operacion.model;
+
 import java.io.Serializable;
-import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "operacion")
 public class OperacionModel implements Serializable {
@@ -20,8 +24,9 @@ public class OperacionModel implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Column(name = "id_operacion", updatable = false, nullable = false)
-    private String idOperacion;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_operacion")
+    private Integer idOperacion;
 
     @Column(name = "id_cliente")
     private Integer idCliente;
@@ -32,18 +37,10 @@ public class OperacionModel implements Serializable {
     @Column(name = "total")
     private double total;
 
-    public OperacionModel(String tipoOperacion, Integer idCliente, double total) {
-        this.idOperacion = UUID.randomUUID().toString();
-        this.tipoOperacion = tipoOperacion;
+    public OperacionModel(Integer idCliente, String tipoOperacion, double total) {
         this.idCliente = idCliente;
+        this.tipoOperacion = tipoOperacion;
         this.total = total;
     }
 
-    @PrePersist
-    public void prePersist() {
-        if (this.idOperacion == null) {
-            this.idOperacion = UUID.randomUUID().toString();
-        }
-    }
 }
-

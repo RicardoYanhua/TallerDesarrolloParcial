@@ -1,5 +1,4 @@
-package com.yanhua.ms.Operacion.exception;
-
+package com.yanhua.ms.operacion.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

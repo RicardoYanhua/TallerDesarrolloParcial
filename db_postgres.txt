@@ -1,3 +1,8 @@
+PORT = 5439
+USER = postgres
+PASSWORD = Unu#2025
+
+
 -- Crear la base de datos si no existe
 CREATE DATABASE db_producto;
 
@@ -5,6 +10,7 @@ CREATE DATABASE db_producto;
 \c db_producto;
 
 -- Crear la tabla 'producto'
+-- (La tabla se crea solo si no existe, dentro del esquema público)
 CREATE TABLE IF NOT EXISTS public.producto (
     id_producto SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -12,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.producto (
 );
 
 -- Insertar 10 registros de ejemplo
+-- (Cada registro contiene un nombre y un precio para poblar la tabla producto)
 INSERT INTO public.producto (nombre, precio)
 VALUES
     ('Laptop', 24500.99),

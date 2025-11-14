@@ -1,5 +1,34 @@
-MsOperacion -  http://localhost:87/api/operacion/registrar
+MsUsuario
 
-MsProducto  -  http://localhost:86/api/productos/update/{}
+	Listar usuarios
+		http://localhost:85/api/usuario/listar
 
-MsUsuario   -  http://localhost:85/api/usuario/login
+	Login de usuario
+		http://localhost:85/api/usuario/login
+
+MsProducto 
+
+	Listar productos
+		http://localhost:86/api/producto/listar
+
+	Crear producto
+		http://localhost:86/api/producto/crear
+
+	Obtener producto por ID
+		http://localhost:86/api/producto/{idProducto}
+
+	Actualizar producto
+		http://localhost:86/api/producto/update/{idProducto}
+
+	Eliminar producto
+		http://localhost:86/api/producto/delete/{idProducto}
+
+MsOperacion
+
+	Registrar operacion
+		http://localhost:87/api/operacion/registrar
+	Listar operaciones
+		http://localhost:87/api/operacion/listar
+
+
+

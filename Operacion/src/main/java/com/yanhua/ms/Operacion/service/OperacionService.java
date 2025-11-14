@@ -1,38 +1,47 @@
-package com.yanhua.ms.Operacion.service;
+package com.yanhua.ms.operacion.service;
  
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.yanhua.ms.Operacion.model.OperacionModel;
-import com.yanhua.ms.Operacion.repository.IOperacionRepository;
-
-
+import com.yanhua.ms.operacion.model.OperacionModel;
+import com.yanhua.ms.operacion.repository.IOperacionRepository;
 
 @Service
 public class OperacionService  implements IOperacionService {
- 
-    private static final Logger logger = LoggerFactory.getLogger(OperacionService.class);
     
+    private static final Logger logger = LoggerFactory.getLogger(OperacionService.class);
+
     @Autowired
     private IOperacionRepository operacionRepositoy;
- 
-    @SuppressWarnings("null")
+
+    /**
+     * Persiste una operación en el repositorio.
+     *
+     * @param operacionModel entidad de operación a guardar
+     * @return la entidad guardada (con campos generados por BD, p.ej. id_operacion)
+     */
     @Override
     public OperacionModel Registrar(OperacionModel operacionModel) {
-        logger.info("Iniciando proceso de registro en base de datos");
-        logger.debug("Operación - Tipo: {}, Cliente ID: {}, Total: {}", 
-                operacionModel.getTipoOperacion(), 
-                operacionModel.getIdCliente(), 
-                operacionModel.getTotal());
-        
+        logger.info("[OperacionService][REGISTRAR][INICIO] → Guardando operación idCliente={}, tipo={}, total={}", operacionModel.getIdCliente(), operacionModel.getTipoOperacion(), operacionModel.getTotal());
         OperacionModel saved = operacionRepositoy.save(operacionModel);
-        
-        logger.info("Operación guardada exitosamente en base de datos con ID: {}", saved.getIdOperacion());
-        logger.debug("Operación completada");
-        
+        logger.info("[OperacionService][REGISTRAR][SUCCESS] → Operación guardada con id_operacion={}", saved.getIdOperacion());
         return saved;
+    }
+
+    /**
+     * Recupera todas las operaciones desde el repositorio.
+     *
+     * @return lista de operaciones
+     */
+    @Override
+    public java.util.List<OperacionModel> Listar() {
+        logger.info("[OperacionService][LISTAR][INICIO] → Obteniendo listado de operaciones");
+        java.util.List<OperacionModel> list = new java.util.ArrayList<>();
+        operacionRepositoy.findAll().forEach(list::add);
+        logger.info("[OperacionService][LISTAR][SUCCESS] → Total operaciones encontradas={}", list.size());
+        return list;
     }
 
    

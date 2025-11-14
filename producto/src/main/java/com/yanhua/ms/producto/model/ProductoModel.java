@@ -35,4 +35,10 @@ public class ProductoModel implements Serializable {
     @Column(name = "precio")
     private double precio;
 
+    public ProductoModel( String nombre, double precio) {
+        this.nombre = nombre;
+        this.precio = precio;
+    }
+
+
 }

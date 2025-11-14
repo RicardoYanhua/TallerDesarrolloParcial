@@ -1,10 +1,15 @@
-// Seleccionar la base de datos
-use db_usuario;
+PORT = 27019
+USER = admin
+PASSWORD = Unu#2025
 
-// Crear la colección 'usuario' si no existe
-db.createCollection("usuario");
+// Crear la base de datos db_usuario
 
-// Insertar varios documentos en la colección 'usuario'
+// crear la colección usuario
+// (La colección se crea automáticamente al insertar los documentos)
+
+
+// Insertar este código en mongoDB Shell
+
 db.usuario.insertMany([
     {
         idUsuario: 1,
@@ -22,7 +27,3 @@ db.usuario.insertMany([
         clave: "abc123"
     }
 ]);
-
-// Confirmar la inserción
-print("Usuarios insertados correctamente:");
-db.usuario.find().pretty();

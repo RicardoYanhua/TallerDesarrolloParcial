@@ -8,6 +8,8 @@ import com.yanhua.ms.producto.model.ProductoModel;
 @Repository
 public interface IProductoRepository extends CrudRepository<ProductoModel,Long> {
 
+    ProductoModel findByIdProducto(Long idProducto);
+    
 }
 
 
