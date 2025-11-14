@@ -1,0 +1,170 @@
+
+📘 SPRING DATA MONGODB — GUÍA COMPLETA DE MÉTODOS DERIVADOS
+============================================================
+
+Esta guía detalla cómo usar los "métodos derivados" de Spring Data MongoDB, es decir,
+consultas que se generan automáticamente a partir del nombre del método, sin necesidad de @Query.
+
+Estructura general:
+-------------------
+    findBy<Campo><Operador>(<Tipo> valor)
+
+Ejemplo:
+    findByAmountGreaterThan(Double value)
+    → MongoDB genera automáticamente: { "amount": { "$gt": value } }
+
+-------------------------------------------------------------
+1️⃣ IGUALDAD Y COMPARACIONES BÁSICAS
+-------------------------------------------------------------
+
+| Palabra clave      | Tipo        | Significado                  | Ejemplo                                  | MongoDB Query |
+|--------------------|--------------|------------------------------|------------------------------------------|----------------|
+| Is / Equals        | Cualquiera   | Igual a                      | findByFieldIs(value)                     | { field: value } |
+| Not                | Cualquiera   | Distinto de                  | findByFieldNot(value)                    | { field: { $ne: value } } |
+| In                 | Cualquiera   | Dentro de lista              | findByFieldIn(List<>)                    | { field: { $in: [...] } } |
+| NotIn              | Cualquiera   | No dentro de lista           | findByFieldNotIn(List<>)                 | { field: { $nin: [...] } } |
+| Exists             | Boolean      | Campo existe o no            | findByFieldExists(true)                  | { field: { $exists: true } } |
+
+-------------------------------------------------------------
+2️⃣ COMPARACIONES NUMÉRICAS
+-------------------------------------------------------------
+
+| Palabra clave         | Tipo Numérico / Fecha | Significado        | Ejemplo                                   | MongoDB Query |
+|------------------------|----------------------|--------------------|-------------------------------------------|----------------|
+| GreaterThan            | Numérico / Fecha     | Mayor que          | findByAmountGreaterThan(val)              | { amount: { $gt: val } } |
+| GreaterThanEqual       | Numérico / Fecha     | Mayor o igual que  | findByAmountGreaterThanEqual(val)         | { amount: { $gte: val } } |
+| LessThan               | Numérico / Fecha     | Menor que          | findByAmountLessThan(val)                 | { amount: { $lt: val } } |
+| LessThanEqual          | Numérico / Fecha     | Menor o igual que  | findByAmountLessThanEqual(val)            | { amount: { $lte: val } } |
+| Between                | Numérico / Fecha     | Entre dos valores  | findByAmountBetween(min, max)             | { amount: { $gte: min, $lte: max } } |
+
+-------------------------------------------------------------
+3️⃣ TEXTO Y PATRONES (STRING)
+-------------------------------------------------------------
+
+| Palabra clave         | Tipo    | Significado                   | Ejemplo                                     | MongoDB Query |
+|------------------------|---------|-------------------------------|---------------------------------------------|----------------|
+| Containing             | String  | Contiene texto ("LIKE %x%")   | findByNameContaining("abc")                 | { name: { $regex: ".*abc.*" } } |
+| StartingWith           | String  | Empieza con ("abc%")          | findByNameStartingWith("abc")               | { name: { $regex: "^abc" } } |
+| EndingWith             | String  | Termina con ("%abc")          | findByNameEndingWith("abc")                 | { name: { $regex: "abc$" } } |
+| Like                   | String  | Similar a patrón              | findByNameLike("pattern")                   | { name: { $regex: "pattern" } } |
+| IgnoreCase             | String  | Ignora mayúsculas/minúsculas  | findByNameContainingIgnoreCase("abc")       | { name: { $regex: ".*abc.*", $options: "i" } } |
+| NotContaining          | String  | No contiene texto             | findByNameNotContaining("abc")              | { name: { $not: /.*abc.*/ } } |
+
+-------------------------------------------------------------
+4️⃣ FECHAS Y TIEMPO (Date / LocalDateTime)
+-------------------------------------------------------------
+
+| Palabra clave  | Tipo Fecha  | Significado   | Ejemplo                            | MongoDB Query |
+|----------------|--------------|---------------|------------------------------------|----------------|
+| Before         | Fecha        | Antes de      | findByDateBefore(fecha)            | { date: { $lt: fecha } } |
+| After          | Fecha        | Después de    | findByDateAfter(fecha)             | { date: { $gt: fecha } } |
+| Between        | Fecha        | Entre fechas  | findByDateBetween(inicio, fin)     | { date: { $gte: inicio, $lte: fin } } |
+
+-------------------------------------------------------------
+5️⃣ BOOLEANOS Y VALORES NULOS
+-------------------------------------------------------------
+
+| Palabra clave | Tipo      | Significado        | Ejemplo                 | MongoDB Query |
+|----------------|------------|--------------------|--------------------------|----------------|
+| True           | Boolean    | Valor verdadero    | findByActiveTrue()       | { active: true } |
+| False          | Boolean    | Valor falso        | findByActiveFalse()      | { active: false } |
+| Null           | Cualquiera | Valor nulo         | findByFieldNull()        | { field: null } |
+| NotNull        | Cualquiera | No nulo            | findByFieldNotNull()     | { field: { $ne: null } } |
+
+-------------------------------------------------------------
+6️⃣ COMBINACIONES LÓGICAS
+-------------------------------------------------------------
+
+Puedes combinar condiciones con `And` y `Or`.
+
+Ejemplos:
+    findByStatusAndCategory(String s, String c)
+        → { "status": s, "category": c }
+
+    findByTypeOrCategory(String t, String c)
+        → { "$or": [ { "type": t }, { "category": c } ] }
+
+-------------------------------------------------------------
+7️⃣ OPERACIONES DE AGREGACIÓN AUTOMÁTICA
+-------------------------------------------------------------
+
+| Palabra clave | Descripción | Ejemplo | Resultado |
+|----------------|--------------|----------|-------------|
+| CountBy        | Cuenta documentos | countByStatus("Aprobado") | long |
+| ExistsBy       | Verifica existencia | existsByEmail("user@x.com") | boolean |
+| DeleteBy       | Elimina documentos | deleteByStatus("Rechazado") | long o void |
+| DistinctBy     | Valores únicos | findDistinctByField() | List<> |
+
+-------------------------------------------------------------
+8️⃣ ORDEN Y PÁGINAS
+-------------------------------------------------------------
+
+Todos los métodos `findBy...` aceptan parámetros opcionales de orden o paginación:
+
+    List<Entity> findByAmountGreaterThan(Double val, Sort sort);
+    Page<Entity> findByStatus(String s, Pageable pageable);
+
+Ejemplos:
+    Sort sort = Sort.by("amount").descending();
+    Pageable page = PageRequest.of(0, 10);
+
+-------------------------------------------------------------
+9️⃣ COMBINACIONES COMPLEJAS
+-------------------------------------------------------------
+
+    List<Entity> findByPriceBetweenAndNameContainingIgnoreCase(Double min, Double max, String name);
+
+Genera:
+    {
+      "price": { "$gte": min, "$lte": max },
+      "name": { "$regex": ".*name.*", "$options": "i" }
+    }
+
+-------------------------------------------------------------
+🔟 RESUMEN DE PALABRAS CLAVE MÁS USADAS
+-------------------------------------------------------------
+
+🧩 COMPARACIÓN
+    Is, Equals, Not, In, NotIn, Between,
+    GreaterThan, GreaterThanEqual, LessThan, LessThanEqual
+
+🧩 TEXTO
+    Containing, NotContaining, StartingWith, EndingWith,
+    Like, Regex, IgnoreCase
+
+🧩 FECHAS
+    Before, After, Between
+
+🧩 BOOLEANOS Y NULOS
+    True, False, Null, NotNull, Exists
+
+🧩 LÓGICOS
+    And, Or
+
+🧩 AGREGACIONES
+    CountBy, ExistsBy, DeleteBy, DistinctBy
+
+🧩 ORDEN Y LÍMITES
+    Top, First, OrderBy
+
+-------------------------------------------------------------
+📘 NOTA FINAL
+-------------------------------------------------------------
+
+- Todos los nombres de campos deben coincidir con los atributos de tu clase modelo (no con las columnas de MongoDB).
+- Spring Data convierte automáticamente el nombre del campo en la consulta MongoDB.
+- Si necesitas más control o condiciones complejas, puedes usar @Query o @Aggregation.
+
+-------------------------------------------------------------
+Ejemplo completo:
+-------------------------------------------------------------
+
+@Repository
+public interface ExampleRepository extends MongoRepository<ExampleEntity, String> {
+
+    List<ExampleEntity> findByNumericFieldBetween(Double min, Double max);
+    List<ExampleEntity> findByTextFieldContainingIgnoreCase(String text);
+    List<ExampleEntity> findByDateFieldAfter(Date startDate);
+    long countByStatus(String status);
+    boolean existsByEmail(String email);
+}

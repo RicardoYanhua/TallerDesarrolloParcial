@@ -1,0 +1,29 @@
+-- Crear la base de datos si no existe
+CREATE DATABASE db_producto;
+
+-- Conectarse a la base de datos
+\c db_producto;
+
+-- Crear la tabla 'producto'
+CREATE TABLE IF NOT EXISTS public.producto (
+    id_producto SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    precio NUMERIC(12,2) NOT NULL
+);
+
+-- Insertar 10 registros de ejemplo
+INSERT INTO public.producto (nombre, precio)
+VALUES
+    ('Laptop', 24500.99),
+    ('Smartphone', 15000.50),
+    ('Tablet', 8200.75),
+    ('Teclado', 670.50),
+    ('Mouse', 350.00),
+    ('Monitor', 7200.25),
+    ('Auriculares', 1200.80),
+    ('Cámara', 5400.00),
+    ('Impresora', 4300.90),
+    ('Disco Duro', 2800.60);
+
+-- Verificar la inserción
+SELECT * FROM public.producto;

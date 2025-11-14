@@ -1,0 +1,44 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.7)
+
+2025-11-13T22:51:58.219-05:00  INFO 21340 --- [producto] [           main] c.lewis.ms.producto.ProductoApplication  : Starting ProductoApplication v0.0.1-SNAPSHOT using Java 24.0.2 with PID 21340 (D:\D_OFICIAL 2025\PARCIAL_TD_DIAZFASABI\producto\target\producto-0.0.1-SNAPSHOT.jar started by Lewis Diaz in D:\D_OFICIAL 2025\PARCIAL_TD_DIAZFASABI\producto)
+2025-11-13T22:51:58.228-05:00  INFO 21340 --- [producto] [           main] c.lewis.ms.producto.ProductoApplication  : No active profile set, falling back to 1 default profile: "default"
+2025-11-13T22:52:00.719-05:00  INFO 21340 --- [producto] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-11-13T22:52:00.879-05:00  INFO 21340 --- [producto] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 118 ms. Found 1 JPA repository interface.
+2025-11-13T22:52:02.439-05:00  INFO 21340 --- [producto] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 86 (http)
+2025-11-13T22:52:02.480-05:00  INFO 21340 --- [producto] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-11-13T22:52:02.482-05:00  INFO 21340 --- [producto] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.48]
+2025-11-13T22:52:02.579-05:00  INFO 21340 --- [producto] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-11-13T22:52:02.581-05:00  INFO 21340 --- [producto] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 4220 ms
+2025-11-13T22:52:03.110-05:00  INFO 21340 --- [producto] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-11-13T22:52:03.315-05:00  INFO 21340 --- [producto] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.33.Final
+2025-11-13T22:52:03.440-05:00  INFO 21340 --- [producto] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-11-13T22:52:04.149-05:00  INFO 21340 --- [producto] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-11-13T22:52:04.210-05:00  INFO 21340 --- [producto] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-11-13T22:52:04.674-05:00  INFO 21340 --- [producto] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@4eb63dc8
+2025-11-13T22:52:04.680-05:00  INFO 21340 --- [producto] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-11-13T22:52:04.749-05:00  WARN 21340 --- [producto] [           main] org.hibernate.orm.deprecation            : HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-11-13T22:52:04.803-05:00  INFO 21340 --- [producto] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 18.1
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-11-13T22:52:06.681-05:00  INFO 21340 --- [producto] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-11-13T22:52:06.790-05:00  INFO 21340 --- [producto] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-11-13T22:52:07.764-05:00  WARN 21340 --- [producto] [           main] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2025-11-13T22:52:09.436-05:00  INFO 21340 --- [producto] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 86 (http) with context path '/'
+2025-11-13T22:52:09.462-05:00  INFO 21340 --- [producto] [           main] c.lewis.ms.producto.ProductoApplication  : Started ProductoApplication in 12.748 seconds (process running for 14.505)
+2025-11-13T22:52:27.845-05:00  INFO 21340 --- [producto] [p-nio-86-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-11-13T22:52:27.847-05:00  INFO 21340 --- [producto] [p-nio-86-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-11-13T22:52:27.849-05:00  INFO 21340 --- [producto] [p-nio-86-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2025-11-13T22:52:28.801-05:00 ERROR 21340 --- [producto] [p-nio-86-exec-1] c.l.m.p.e.GlobalExceptionHandler         : [Global] ? Error no controlado: Handler dispatch failed: java.lang.NoSuchMethodError: 'void org.springframework.web.method.ControllerAdviceBean.<init>(java.lang.Object)'

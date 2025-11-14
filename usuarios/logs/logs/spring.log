@@ -1,0 +1,7 @@
+2025-11-13 23:03:38.705 ERROR [http-nio-85-exec-1] H.u.exception.GlobalExceptionHandler - [Global] ? Error no controlado: Handler dispatch failed: java.lang.NoSuchMethodError: 'void org.springframework.web.method.ControllerAdviceBean.<init>(java.lang.Object)'
+2025-11-13 23:03:38.810 ERROR [http-nio-85-exec-2] H.u.exception.GlobalExceptionHandler - [Global] ? Error no controlado: No static resource favicon.ico.
+2025-11-13 23:03:53.057 ERROR [http-nio-85-exec-6] H.u.exception.GlobalExceptionHandler - [Global] ? Error no controlado: Handler dispatch failed: java.lang.NoSuchMethodError: 'void org.springframework.web.method.ControllerAdviceBean.<init>(java.lang.Object)'
+2025-11-13 23:09:17.174 ERROR [http-nio-85-exec-3] H.u.exception.GlobalExceptionHandler - [Global] ? Error no controlado: No static resource api/usuario/login.
+2025-11-13 23:10:34.713 ERROR [http-nio-85-exec-4] H.u.exception.GlobalExceptionHandler - [Global] ? Error no controlado: No static resource api/usuario/login.
+2025-11-13 23:11:10.267 ERROR [http-nio-85-exec-9] H.u.exception.GlobalExceptionHandler - [Global] ? Error no controlado: No static resource api/usuario/login.
+2025-11-13 23:13:25.711 ERROR [http-nio-85-exec-6] H.u.exception.GlobalExceptionHandler - [Global] ? Error no controlado: No static resource api/usuario/login.

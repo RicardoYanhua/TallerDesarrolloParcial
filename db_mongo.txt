@@ -1,0 +1,28 @@
+// Seleccionar la base de datos
+use db_usuario;
+
+// Crear la colección 'usuario' si no existe
+db.createCollection("usuario");
+
+// Insertar varios documentos en la colección 'usuario'
+db.usuario.insertMany([
+    {
+        idUsuario: 1,
+        nombre: "admin",
+        clave: "123456"
+    },
+    {
+        idUsuario: 2,
+        nombre: "juan",
+        clave: "pass123"
+    },
+    {
+        idUsuario: 3,
+        nombre: "maria",
+        clave: "abc123"
+    }
+]);
+
+// Confirmar la inserción
+print("Usuarios insertados correctamente:");
+db.usuario.find().pretty();
